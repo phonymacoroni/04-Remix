@@ -1,8 +1,8 @@
 <html>
   <body>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <script src="https://d3js.org/d3-time.v2.min.js"></script>
-    <script src="https://d3js.org/d3-time-format.v3.min.js"></script>
+    <!-- <script src="https://d3js.org/d3-time.v2.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v3.min.js"></script> -->
 
     <div id="viz"></div>
 
@@ -27,7 +27,12 @@
         // console.log(JSON.parse(data))
 
         // Time formatting
-        
+        var parseDuration = d3.timeParse("%H:%M:%S");
+        console.log(parseDuration("14:18:21"))
+
+        var parseDateTime = d3.timeParse("%Y-%m-%d %I:%M:%S %p")
+
+
 
         // X axis
         var x = d3
@@ -35,7 +40,7 @@
           .range([0, width])
           .domain(
             data.map(function (d) {
-              // console.log(d)
+              console.log(parseDateTime(d.startDate + " " + d.startTime))
               return d.startDate;
             })
           )
@@ -62,11 +67,13 @@
             return x(d.startDate);
           })
           .attr("y", function (d) {
-            // return y(d.duration);
+            return y(d.duration);
             return 30;
           })
           .attr("width", x.bandwidth())
           .attr("height", function (d) {
+            //   console.log(d.duration)
+            //   console.log(parseDuration(d.duration))
             // return height - y(d.duration);
             return 10;
           })
