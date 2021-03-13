@@ -28,23 +28,32 @@
 
         // Time formatting
         var parseDuration = d3.timeParse("%H:%M:%S");
-        console.log(parseDuration("14:18:21"))
+        console.log(parseDuration("14:18:21"));
 
-        var parseDateTime = d3.timeParse("%Y-%m-%d %I:%M:%S %p")
-
-
+        // var parseDateTime = d3.timeParse("%Y-%m-%d %I:%M:%S %p")
+        var parseDateTime = d3.timeParse("%Y-%m-%d %X");
 
         // X axis
+        // var x = d3
+        //   .scaleBand()
+        //   .range([0, width])
+        //   .domain(
+        //     data.map(function (d) {
+        //       console.log(parseDateTime(d.startDate + " " + d.startTime))
+        //       return parseDateTime(d.startDate + " " + d.startTime);
+        //     })
+        //   )
+        //   .padding(0.2);
+
         var x = d3
-          .scaleBand()
-          .range([0, width])
+          .scaleTime()
           .domain(
-            data.map(function (d) {
-              console.log(parseDateTime(d.startDate + " " + d.startTime))
-              return d.startDate;
+            d3.extent(data, function (d) {
+              return parseDateTime(d.startDate + " " + d.startTime);
             })
           )
-          .padding(0.2);
+          // .nice(d3.time.day, 1)
+          .rangeRound([0, width - margin.left - margin.right]);
         svg
           .append("g")
           .attr("transform", "translate(0," + height + ")")
@@ -54,7 +63,14 @@
           .style("text-anchor", "end");
 
         // Add Y axis
-        var y = d3.scaleLinear().domain([0, 13000]).range([height, 0]);
+        var y = d3
+          .scaleTime()
+          .domain(
+            d3.extent(data, function (d) {
+              return parseDuration(d.duration);
+            })
+          )
+          .range([height, 0]);
         svg.append("g").call(d3.axisLeft(y));
 
         // Bars
@@ -70,7 +86,7 @@
             return y(d.duration);
             return 30;
           })
-          .attr("width", x.bandwidth())
+          //   .attr("width", x.bandwidth())
           .attr("height", function (d) {
             //   console.log(d.duration)
             //   console.log(parseDuration(d.duration))
