@@ -10,8 +10,10 @@
       console.log({ d3 });
 
       var margin = { top: 10, right: 30, bottom: 40, left: 50 },
+        margin2 = { top: 430, right: 10, bottom: 20, left: 40 },
         width = 820 - margin.left - margin.right,
-        height = 520 - margin.top - margin.bottom;
+        height = 520 - margin.top - margin.bottom,
+        height2 = 500 - margin2.top - margin2.bottom;
 
       // append the svg object to the body of the page
       var svg = d3
@@ -58,6 +60,19 @@
           )
           // .nice(d3.time.day, 1)
           .rangeRound([0, width - margin.left - margin.right]);
+
+        var x2 = d3
+          .scaleTime()
+          .domain(
+            d3.extent(data, function (d) {
+              return parseDateTime(d.startDate + " " + d.startTime);
+            })
+          )
+          // .nice(d3.time.day, 1)
+          .rangeRound([0, width - margin.left - margin.right]);
+
+        var brush = d3.svg.brush().x(x2).on("brush", brushed);
+
         svg
           .append("g")
           .attr("transform", "translate(0," + height + ")")
@@ -78,6 +93,9 @@
         // svg.append("g").call(d3.axisLeft(y));
 
         var y = d3.scaleLinear().domain([0, 1000]).range([height, 0]);
+        var y2 = d3.scaleLinear().domain([0, 1000]).range([height2, 0]);
+        // var xAxis = d3.svg.axis().scale(x).orient("bottom");
+        // var xAxis2 = d3.svg.axis().scale(x2).orient("bottom").tickValues([]);
         svg.append("g").call(d3.axisLeft(y));
 
         // Add X axis label
@@ -127,6 +145,54 @@
           );
         };
 
+        var focus = svg
+          .append("g")
+          .attr("class", "focus")
+          .attr(
+            "transform",
+            "translate(" + margin.left + "," + margin.top + ")"
+          );
+        var context = svg
+          .append("g")
+          .attr("class", "context")
+          .attr(
+            "transform",
+            "translate(" + margin2.left + "," + margin2.top + ")"
+          );
+
+        focus
+          .append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x2));
+
+        focus.append("g").attr("class", "y axis").call(d3.axisLeft(y));
+
+        console.log(x(data[0].date));
+        enter(data);
+        updateScale(data);
+
+        var subBars = context.selectAll(".subBar").data(data);
+
+        subBars
+          .enter()
+          .append("rect")
+          .classed("subBar", true)
+          .attr({
+            height: function (d) {
+              return height2 - y2(getDuration(parseDuration(d.duration)));
+            },
+            width: function (d) {
+              return x.rangeBand();
+            },
+            x: function (d) {
+              return x2(d.date);
+            },
+            y: function (d) {
+              return y2(getDuration(parseDuration(d.duration)));
+            },
+          });
+
         // Bars
         svg
           .selectAll("mybar")
@@ -162,6 +228,125 @@
         // console.log(dur);
         // console.log(dur.getHours() * 60 + dur.getMinutes());
         return dur.getHours() * 60 + dur.getMinutes();
+      }
+
+      function brushed() {
+        var selected = null;
+        selected = x2.domain().filter(function (d) {
+          return brush.extent()[0] <= x2(d) && x2(d) <= brush.extent()[1];
+        });
+
+        var start;
+        var end;
+
+        if (brush.extent()[0] != brush.extent()[1]) {
+          start = selected[0];
+          end = selected[selected.length - 1] + 1;
+        } else {
+          start = 0;
+          end = data.length;
+        }
+
+        var updatedData = data.slice(start, end);
+
+        update(updatedData);
+        enter(updatedData);
+        exit(updatedData);
+        updateScale(updatedData);
+      }
+
+      function updateScale(data) {
+        var tickScale = d3.scale
+          .pow()
+          .range([data.length / 10, 0])
+          .domain([data.length, 0])
+          .exponent(0.5);
+
+        var brushValue = brush.extent()[1] - brush.extent()[0];
+        if (brushValue === 0) {
+          brushValue = width;
+        }
+
+        var tickValueMultiplier = Math.ceil(Math.abs(tickScale(brushValue)));
+        var filteredTickValues = data
+          .filter(function (d, i) {
+            return i % tickValueMultiplier === 0;
+          })
+          .map(function (d) {
+            return d.date;
+          });
+
+        focus.select(".x.axis").call(xAxis.tickValues(filteredTickValues));
+        focus.select(".y.axis").call(d3.axisLeft(y));
+      }
+
+      function update(data) {
+        x.domain(
+          data.map(function (d) {
+            return d.date;
+          })
+        );
+        y.domain([
+          0,
+          d3.max(data, function (d) {
+            return getDuration(parseDuration(d.duration));
+          }),
+        ]);
+
+        var bars = focus.selectAll(".bar").data(data);
+        bars.attr({
+          height: function (d, i) {
+            return height - y(getDuration(parseDuration(d.duration)));
+          },
+          width: function (d) {
+            return x.rangeBand();
+          },
+          x: function (d) {
+            return x(d.date);
+          },
+          y: function (d) {
+            return y(getDuration(parseDuration(d.duration)));
+          },
+        });
+      }
+
+      function exit(data) {
+        var bars = focus.selectAll(".bar").data(data);
+        bars.exit().remove();
+      }
+
+      function enter(data) {
+        x.domain(
+          data.map(function (d) {
+            return d.date;
+          })
+        );
+        y.domain([
+          0,
+          d3.max(data, function (d) {
+            return getDuration(parseDuration(d.duration));
+          }),
+        ]);
+
+        var bars = focus.selectAll(".bar").data(data);
+        bars
+          .enter()
+          .append("rect")
+          .classed("bar", true)
+          .attr({
+            height: function (d, i) {
+              return height - y(getDuration(parseDuration(d.duration)));
+            },
+            width: function (d) {
+              return x.rangeBand();
+            },
+            x: function (d) {
+              return x(d.date);
+            },
+            y: function (d) {
+              return y(getDuration(parseDuration(d.duration)));
+            },
+          });
       }
     </script>
   </body>
