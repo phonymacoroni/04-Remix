@@ -10,7 +10,7 @@
       console.log({ d3 });
 
       var margin = { top: 10, right: 30, bottom: 40, left: 50 },
-        width = 520 - margin.left - margin.right,
+        width = 820 - margin.left - margin.right,
         height = 520 - margin.top - margin.bottom;
 
       // append the svg object to the body of the page
@@ -80,6 +80,23 @@
         var y = d3.scaleLinear().domain([0, 1000]).range([height, 0]);
         svg.append("g").call(d3.axisLeft(y));
 
+        // Add X axis label
+        svg
+          .append("text")
+          .attr("y", height + margin.bottom / 1.2)
+          .attr("x", width / 2)
+          .style("text-anchor", "middle")
+          .text("Date");
+
+        // Add Y axis label
+        svg
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -10 - margin.left / 2)
+          .attr("x", 0 - height / 2)
+          .style("text-anchor", "middle")
+          .text("Minutes");
+
         var tooltip = d3
           .select("#viz")
           .append("div")
@@ -101,7 +118,13 @@
 
         var mouseOver = function (d) {
           //   console.log(d.toElement.__data__);
-          tooltip.html("Start Time: " + d.toElement.__data__.startTime);
+          tooltip.html(
+            "Start Time: " +
+              d.toElement.__data__.startTime +
+              "<br>" +
+              "Duration: " +
+              formatDuration(parseDuration(d.toElement.__data__.duration))
+          );
         };
 
         // Bars
@@ -134,6 +157,7 @@
           .on("mouseleave", mouseOff);
       });
 
+      // Get Duration in minutes
       function getDuration(dur) {
         // console.log(dur);
         // console.log(dur.getHours() * 60 + dur.getMinutes());
