@@ -20,7 +20,7 @@
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      d3.csv("/a4-softeng.csv").then(function (data) {
+      d3.csv("https://raw.githubusercontent.com/phonymacoroni/04-Remix/main/a4-softeng.csv").then(function (data) {
         console.log({ data });
         // console.log(JSON.parse(data))
 
