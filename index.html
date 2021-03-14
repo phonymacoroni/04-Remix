@@ -80,6 +80,30 @@
         var y = d3.scaleLinear().domain([0, 1000]).range([height, 0]);
         svg.append("g").call(d3.axisLeft(y));
 
+        var tooltip = d3
+          .select("#viz")
+          .append("div")
+          .style("opacity", 0)
+          .attr("class", "tooltip")
+          .style("background-color", "white")
+          .style("border", "solid")
+          .style("border-width", "1px")
+          .style("border-radius", "5px")
+          .style("padding", "10px");
+
+        var mouseOn = function (d) {
+          tooltip.style("opacity", "1");
+        };
+
+        var mouseOff = function (d) {
+          tooltip.style("opacity", "0");
+        };
+
+        var mouseOver = function (d) {
+          //   console.log(d.toElement.__data__);
+          tooltip.html("Start Time: " + d.toElement.__data__.startTime);
+        };
+
         // Bars
         svg
           .selectAll("mybar")
@@ -101,12 +125,18 @@
             // console.log(d)
             // return 100;
           })
-          .attr("fill", "#69b3a2");
+          .attr("fill", "#69b3a2")
+          .on("mousemove", mouseOver)
+          //   .on("mousemove", function (d){
+          //       console.log(d)
+          //   })
+          .on("mouseover", mouseOn)
+          .on("mouseleave", mouseOff);
       });
 
       function getDuration(dur) {
-        console.log(dur);
-        console.log(dur.getHours() * 60 + dur.getMinutes());
+        // console.log(dur);
+        // console.log(dur.getHours() * 60 + dur.getMinutes());
         return dur.getHours() * 60 + dur.getMinutes();
       }
     </script>
