@@ -1,8 +1,6 @@
 <html>
   <body>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <!-- <script src="https://d3js.org/d3-time.v2.min.js"></script>
-    <script src="https://d3js.org/d3-time-format.v3.min.js"></script> -->
 
     <div id="viz"></div>
 
@@ -66,17 +64,6 @@
           .attr("transform", "translate(-10,0)rotate(-45)")
           .style("text-anchor", "end");
 
-        // Add Y axis
-        // var y = d3
-        //   .scaleTime()
-        //   .domain(
-        //     d3.extent(data, function (d) {
-        //       return parseDuration(d.duration);
-        //     })
-        //   )
-        //   .range([height, 0]);
-        // svg.append("g").call(d3.axisLeft(y));
-
         var y = d3.scaleLinear().domain([0, 1000]).range([height, 0]);
         svg.append("g").call(d3.axisLeft(y));
 
@@ -117,7 +104,6 @@
         };
 
         var mouseOver = function (d) {
-          //   console.log(d.toElement.__data__);
           tooltip.html(
             "Start Time: " +
               d.toElement.__data__.startTime +
@@ -137,30 +123,21 @@
             return x(parseDateTime(d.startDate + " " + d.startTime));
           })
           .attr("y", function (d) {
-            // return y(parseDuration(d.duration));
             return y(getDuration(parseDuration(d.duration)));
           })
           .attr("width", barWidth)
           .attr("height", function (d) {
-            //   console.log(d.duration)
-            //   console.log(parseDuration(d.duration))
             return height - y(getDuration(parseDuration(d.duration)));
-            // console.log(d)
-            // return 100;
           })
           .attr("fill", "#69b3a2")
           .on("mousemove", mouseOver)
-          //   .on("mousemove", function (d){
-          //       console.log(d)
-          //   })
+
           .on("mouseover", mouseOn)
           .on("mouseleave", mouseOff);
       });
 
       // Get Duration in minutes
       function getDuration(dur) {
-        // console.log(dur);
-        // console.log(dur.getHours() * 60 + dur.getMinutes());
         return dur.getHours() * 60 + dur.getMinutes();
       }
     </script>
